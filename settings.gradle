@@ -1,1 +1,1 @@
-include ':app', ':gang-accessibility'
+include ':app', ':gang-accessibility', ':accessibility2'

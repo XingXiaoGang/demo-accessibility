@@ -5,6 +5,8 @@ import android.app.DialogFragment;
 import android.hardware.fingerprint.FingerprintManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,24 +14,37 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import fingerprint.FingerPrintHelper;
+import fingerprint.FingerPrintHelper2;
 
 /**
  * Created by xingxiaogang on 2016/5/19.
  */
-public class ConformDialog extends DialogFragment implements FingerPrintHelper.FingerPrintCallBack {
+public class ConformDialog extends DialogFragment {
 
     private TextView mTextView;
-    private FingerPrintHelper mHelper;
-    FingerPrintHelper.UseState useState;
+    private FingerPrintHelper2 mHelper;
+    FingerPrintHelper2.UseState useState;
+
+    private Handler mHandler = new Handler(new Handler.Callback() {
+        @Override
+        public boolean handleMessage(Message msg) {
+            switch (msg.what) {
+                case R.id.close_dialog: {
+                    dismiss();
+                    break;
+                }
+            }
+            return false;
+        }
+    });
 
     @TargetApi(Build.VERSION_CODES.M)
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fingerprint_dialog_layout, container);
         mTextView = (TextView) view.findViewById(R.id.tips_textview);
-        mHelper = FingerPrintHelper.getInstance(getContext());
-        useState = FingerPrintHelper.getState(getContext());
+        mHelper = new FingerPrintHelper2(getContext());
+        useState = FingerPrintHelper2.getState(getContext());
         return view;
     }
 
@@ -39,15 +54,17 @@ public class ConformDialog extends DialogFragment implements FingerPrintHelper.F
         DisplayMetrics dm = new DisplayMetrics();
         getActivity().getWindowManager().getDefaultDisplay().getMetrics(dm);
         getDialog().getWindow().setLayout(dm.widthPixels, getDialog().getWindow().getAttributes().height);
+
+        if (mHelper != null) {
+            mHelper.listen(new MAuthenticationCallback());
+        }
     }
 
     @TargetApi(Build.VERSION_CODES.M)
     @Override
     public void onResume() {
         super.onResume();
-        if (mHelper != null) {
-            mHelper.startListen(getContext(), ConformDialog.this);
-        }
+
         switch (useState) {
             case API_UN_SUPPORT: {
                 mTextView.setText("api<23");
@@ -79,34 +96,38 @@ public class ConformDialog extends DialogFragment implements FingerPrintHelper.F
     @Override
     public void onDestroy() {
         super.onDestroy();
-        mHelper.stopListen();
+        mHelper.stop();
     }
 
     @TargetApi(Build.VERSION_CODES.M)
-    @Override
-    public void onCancel(boolean fromUser) {
-        Toast.makeText(getContext(), "onCancel", Toast.LENGTH_LONG).show();
-        mTextView.setText("已取消");
-    }
+    private class MAuthenticationCallback extends FingerprintManager.AuthenticationCallback {
+        @Override
+        public void onAuthenticationError(int errorCode, CharSequence errString) {
+            super.onAuthenticationError(errorCode, errString);
+            Toast.makeText(getContext(), "onAuthenticationError：", Toast.LENGTH_LONG).show();
+            mTextView.setText("onAuthenticationError:" + errorCode + "," + String.valueOf(errString));
+        }
 
-    @TargetApi(Build.VERSION_CODES.M)
-    @Override
-    public void onFailed() {
-        Toast.makeText(getContext(), "onFailed", Toast.LENGTH_LONG).show();
-        mTextView.setText("验证失败");
-    }
+        @Override
+        public void onAuthenticationFailed() {
+            super.onAuthenticationFailed();
+            Toast.makeText(getContext(), "onFailed", Toast.LENGTH_LONG).show();
+            mTextView.setText("验证失败");
+        }
 
-    @TargetApi(Build.VERSION_CODES.M)
-    @Override
-    public void onError(int errorCode, CharSequence errString) {
-        Toast.makeText(getContext(), "onError", Toast.LENGTH_LONG).show();
-        mTextView.setText("error:" + errorCode + "," + errString);
-    }
+        @Override
+        public void onAuthenticationHelp(int helpCode, CharSequence helpString) {
+            super.onAuthenticationHelp(helpCode, helpString);
+            Toast.makeText(getContext(), "onAuthenticationHelp:", Toast.LENGTH_LONG).show();
+            mTextView.setText("onAuthenticationHelp:" + helpCode + "," + String.valueOf(helpString));
+        }
 
-    @TargetApi(Build.VERSION_CODES.M)
-    @Override
-    public void onSuccess(FingerprintManager.AuthenticationResult result) {
-        Toast.makeText(getContext(), "onSuccess", Toast.LENGTH_LONG).show();
-        mTextView.setText("验证通过");
+        @Override
+        public void onAuthenticationSucceeded(FingerprintManager.AuthenticationResult result) {
+            super.onAuthenticationSucceeded(result);
+            Toast.makeText(getContext(), "验证通过", Toast.LENGTH_LONG).show();
+            mTextView.setText("验证通过");
+            mHandler.sendEmptyMessageDelayed(R.id.close_dialog, 1000);
+        }
     }
 }

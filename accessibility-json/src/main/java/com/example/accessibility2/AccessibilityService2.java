@@ -26,7 +26,6 @@ public class AccessibilityService2 extends AccessibilityService {
 
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
-
     }
 
     @Override

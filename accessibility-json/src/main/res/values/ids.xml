@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="return_download_accessibility_json" type="id" />
+    <item name="return_phone_match_result" type="id" />
+</resources>

@@ -2,4 +2,5 @@
 <resources>
     <item name="return_download_accessibility_json" type="id" />
     <item name="return_phone_match_result" type="id" />
+    <item name="retry_task" type="id" />
 </resources>

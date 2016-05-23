@@ -5,7 +5,6 @@
       <module fileurl="file://$PROJECT_DIR$/accessibility-json/accessibility-json.iml" filepath="$PROJECT_DIR$/accessibility-json/accessibility-json.iml" />
       <module fileurl="file://$PROJECT_DIR$/accessibility-json/accessibility2.iml" filepath="$PROJECT_DIR$/accessibility-json/accessibility2.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
-      <module fileurl="file://$PROJECT_DIR$/gang-accessibility/gang-accessibility.iml" filepath="$PROJECT_DIR$/gang-accessibility/gang-accessibility.iml" />
       <module fileurl="file://$PROJECT_DIR$/testFingerPrint.iml" filepath="$PROJECT_DIR$/testFingerPrint.iml" />
     </modules>
   </component>

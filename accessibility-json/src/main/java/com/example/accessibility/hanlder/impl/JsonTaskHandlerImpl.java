@@ -146,6 +146,7 @@ public class JsonTaskHandlerImpl extends BaseTaskHandler {
             intent.putExtra(Statics.Key.ACTION, R.id.action_finish);
             intent.putExtra(Statics.Key.SUCCESS, msg.arg1 == 0);
             sendBroadcastToClient(intent);
+            Toast.makeText(getService(), "所有操作已执行完成" + (msg.arg1 == 0), Toast.LENGTH_LONG).show();
         }
     }
 
@@ -276,10 +277,9 @@ public class JsonTaskHandlerImpl extends BaseTaskHandler {
                 }
             }
             //通知完成
-            Message message = obtainMessage(R.id.action_progress_update, hasErro ? 1 : 0, erroCode);
+            Message message = obtainMessage(R.id.action_finish, hasErro ? 1 : 0, erroCode);
             sendMessage(message);
             Log.e("test_access", "辅助操作执行完毕.... has error:" + hasErro);
-            Toast.makeText(getService(), "所有操作已执行完成" + hasErro, Toast.LENGTH_LONG).show();
         }
 
         /**

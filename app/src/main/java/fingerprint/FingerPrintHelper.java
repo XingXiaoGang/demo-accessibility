@@ -46,7 +46,6 @@ public class FingerPrintHelper extends FingerprintManager.AuthenticationCallback
     private FingerPrintCallBack mCallBack;
 
     public enum UseState {
-        API_UN_SUPPORT,/*api<23*/
         PERMISSION_DENIED,/*没有权限*/
         NO_HARDWARE,/*没有采集器*/
         NO_FINGER_PRINTS,/*没有录入指纹*/
@@ -66,10 +65,7 @@ public class FingerPrintHelper extends FingerprintManager.AuthenticationCallback
         //api 限制
         final FingerprintManager fingerprintManager = (FingerprintManager) context.getSystemService(Context.FINGERPRINT_SERVICE);
 
-        if (Build.VERSION.SDK_INT < 23) {
-            Log.e("test_finger_print", " error: api<23");
-            return UseState.API_UN_SUPPORT;
-        } else if (ActivityCompat.checkSelfPermission(context, Manifest.permission.USE_FINGERPRINT) != PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.USE_FINGERPRINT) != PackageManager.PERMISSION_GRANTED) {
             Log.e("test_finger_print", " error: 没有权限");
             return UseState.PERMISSION_DENIED;
         } else if (fingerprintManager == null) {

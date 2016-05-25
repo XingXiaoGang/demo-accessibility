@@ -9,6 +9,7 @@ import com.google.gson.stream.JsonReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -46,7 +47,7 @@ public class RomInfoParser extends JsonParser<RomInfoParser.RomInfoResult> {
                         romInfoResult.version = reader.nextInt();
                         break;
                     }
-                    case "case rom_items": {
+                    case "rom_items": {
                         reader.beginArray();
                         while (reader.hasNext()) {
                             RomInfo info = GSON.fromJson(reader, RomInfo.class);
@@ -80,7 +81,7 @@ public class RomInfoParser extends JsonParser<RomInfoParser.RomInfoResult> {
     }
 
     public class RomInfoResult {
-        public List<RomInfo> romInfos;
+        public List<RomInfo> romInfos = new ArrayList<>();
         public int version;
     }
 }

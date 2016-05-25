@@ -1,6 +1,7 @@
 package com.example.accessibility.parser;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.example.accessibility.bean.TaskInfo;
 import com.google.gson.stream.JsonReader;
@@ -37,16 +38,17 @@ public class TasksParser extends JsonParser<TasksParser.TasksResult> {
 
     @Override
     protected TasksResult parse(InputStream jsonStream) {
-        TasksResult rulesResult = new TasksResult();
+        TasksResult tasksResult = new TasksResult();
         JsonReader reader = null;
         try {
             reader = new JsonReader(new InputStreamReader(jsonStream));
+            reader.setLenient(true);
             reader.beginObject();
             while (reader.hasNext()) {
                 String tag = reader.nextName();
                 switch (tag) {
                     case "version": {
-                        rulesResult.version = reader.nextInt();
+                        tasksResult.version = reader.nextInt();
                         break;
                     }
                     case "task_items": {
@@ -54,8 +56,7 @@ public class TasksParser extends JsonParser<TasksParser.TasksResult> {
                         while (reader.hasNext()) {
                             TaskInfo info = GSON.fromJson(reader, TaskInfo.class);
                             if (info != null && info.romId == mRomIdToFind) {
-                                rulesResult.rulsInfo.add(info);
-                                break;
+                                tasksResult.taskInfos.add(info);
                             }
                         }
                         reader.endArray();
@@ -82,12 +83,19 @@ public class TasksParser extends JsonParser<TasksParser.TasksResult> {
                 e.printStackTrace();
             }
         }
-        return rulesResult;
+
+        Log.e("test_access", "taskResult:" + tasksResult);
+        return tasksResult;
     }
 
     public class TasksResult {
         public int version;
         //任务集合
-        public List<TaskInfo> rulsInfo = new ArrayList<>();
+        public List<TaskInfo> taskInfos = new ArrayList<>();
+
+        @Override
+        public String toString() {
+            return "{version:" + version + ",[" + taskInfos + "]}";
+        }
     }
 }

@@ -1,6 +1,7 @@
 package com.example.accessibility.parser;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.example.accessibility.bean.ProcessInfo;
 import com.google.gson.stream.JsonReader;
@@ -41,7 +42,7 @@ public class ProcessParser extends JsonParser<ProcessParser.ProcessInfoResult> {
 
     @Override
     protected ProcessInfoResult parse(InputStream jsonStream) {
-        ProcessInfoResult rulesResult = new ProcessInfoResult();
+        ProcessInfoResult processInfoResult = new ProcessInfoResult();
         JsonReader reader = null;
         try {
             reader = new JsonReader(new InputStreamReader(jsonStream));
@@ -50,7 +51,7 @@ public class ProcessParser extends JsonParser<ProcessParser.ProcessInfoResult> {
                 String tag = reader.nextName();
                 switch (tag) {
                     case "version": {
-                        rulesResult.version = reader.nextInt();
+                        processInfoResult.version = reader.nextInt();
                         break;
                     }
                     case "process_items": {
@@ -58,8 +59,7 @@ public class ProcessParser extends JsonParser<ProcessParser.ProcessInfoResult> {
                         while (reader.hasNext()) {
                             ProcessInfo info = GSON.fromJson(reader, ProcessInfo.class);
                             if (info != null && contains(info.id)) {
-                                rulesResult.processInfos.put(info.id, info);
-                                break;
+                                processInfoResult.processInfos.put(info.id, info);
                             }
                         }
                         reader.endArray();
@@ -86,7 +86,8 @@ public class ProcessParser extends JsonParser<ProcessParser.ProcessInfoResult> {
                 e.printStackTrace();
             }
         }
-        return rulesResult;
+        Log.e("test_access", "processInfoResult:" + processInfoResult);
+        return processInfoResult;
     }
 
     private boolean contains(int id) {
@@ -101,6 +102,11 @@ public class ProcessParser extends JsonParser<ProcessParser.ProcessInfoResult> {
     public class ProcessInfoResult {
         public int version;
         public Map<Integer, ProcessInfo> processInfos = new HashMap<>();
+
+        @Override
+        public String toString() {
+            return "{version:" + version + ",[" + processInfos + "]}";
+        }
     }
 
 }

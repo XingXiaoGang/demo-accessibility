@@ -30,6 +30,13 @@
       "priority": 1
     },
     {
+      "rom": 102,
+      "title": "samsung-正在获取通知栏权限...",
+      "process_id": 2,
+      "type": 2,
+      "priority": 1
+    },
+    {
       "rom": 2,
       "title": "XiaomiV7-正在获取悬浮窗权限...",
       "process_id": 1,

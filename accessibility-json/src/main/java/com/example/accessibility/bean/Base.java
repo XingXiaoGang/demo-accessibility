@@ -26,4 +26,8 @@ public abstract class Base {
         return GSON.toJson(this);
     }
 
+    @Override
+    public String toString() {
+        return toJsonString();
+    }
 }

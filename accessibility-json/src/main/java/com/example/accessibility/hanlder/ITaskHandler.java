@@ -1,12 +1,18 @@
 package com.example.accessibility.hanlder;
 
-import android.view.accessibility.AccessibilityEvent;
-
 /**
  * Created by xingxiaogang on 2016/5/23.
  */
-public interface ITaskHandler {
+public interface ITaskHandler extends IAccessibilityService {
 
-    void onAccessibilityEvent(AccessibilityEvent event);
+    void start();
 
+    void stop();
+
+    void finish();
+
+    boolean isRunning();
+
+    //是否已经初始化json
+    boolean isPrepared();
 }

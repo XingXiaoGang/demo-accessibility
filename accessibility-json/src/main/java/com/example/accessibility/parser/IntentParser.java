@@ -1,6 +1,7 @@
 package com.example.accessibility.parser;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.example.accessibility.bean.IntentInfo;
 import com.google.gson.stream.JsonReader;
@@ -36,7 +37,7 @@ public class IntentParser extends JsonParser<IntentParser.IntentResult> {
 
     @Override
     protected IntentResult parse(InputStream jsonStream) {
-        IntentResult rulesResult = new IntentResult();
+        IntentResult intentResult = new IntentResult();
         JsonReader reader = null;
         try {
             reader = new JsonReader(new InputStreamReader(jsonStream));
@@ -45,7 +46,7 @@ public class IntentParser extends JsonParser<IntentParser.IntentResult> {
                 String tag = reader.nextName();
                 switch (tag) {
                     case "version": {
-                        rulesResult.version = reader.nextInt();
+                        intentResult.version = reader.nextInt();
                         break;
                     }
                     case "intent_items": {
@@ -53,8 +54,7 @@ public class IntentParser extends JsonParser<IntentParser.IntentResult> {
                         while (reader.hasNext()) {
                             IntentInfo info = GSON.fromJson(reader, IntentInfo.class);
                             if (info != null && contains(info.id)) {
-                                rulesResult.intentInfo.put(info.id, info);
-                                break;
+                                intentResult.intentInfo.put(info.id, info);
                             }
                         }
                         reader.endArray();
@@ -81,7 +81,8 @@ public class IntentParser extends JsonParser<IntentParser.IntentResult> {
                 e.printStackTrace();
             }
         }
-        return rulesResult;
+        Log.e("test_access", "intentResult:" + intentResult);
+        return intentResult;
     }
 
     private boolean contains(int id) {
@@ -97,6 +98,11 @@ public class IntentParser extends JsonParser<IntentParser.IntentResult> {
     public class IntentResult {
         public int version;
         public Map<Integer, IntentInfo> intentInfo = new HashMap<>();
+
+        @Override
+        public String toString() {
+            return "{version:" + version + ",[" + intentInfo + "]}";
+        }
     }
 
 }

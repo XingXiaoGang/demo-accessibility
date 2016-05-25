@@ -7,7 +7,7 @@ import com.google.gson.annotations.SerializedName;
  * Created by xingxiaogang on 2016/5/23.
  * 执行一个辅助过程的总信息
  */
-public class ProcessInfo {
+public class ProcessInfo extends Base {
 
     @Expose
     @SerializedName("id")
@@ -24,4 +24,5 @@ public class ProcessInfo {
     @Expose
     @SerializedName("action_id")
     public int[] actionId;
+
 }

@@ -2,6 +2,7 @@ package com.example.accessibility.rom;
 
 import android.content.Context;
 import android.os.Build;
+import android.util.Log;
 
 import com.example.accessibility.rom.bean.Feature;
 import com.example.accessibility.rom.bean.RomInfo;
@@ -128,23 +129,23 @@ public class RomInfoMatcher {
                     break;
                 }
                 case "greater": {
-                    success = valueInt != -1 && valueMatch > valueInt;
+                    success = valueInt != -1 && valueInt > valueMatch;
                     break;
                 }
                 case "less": {
-                    success = valueInt != -1 && valueMatch < valueInt;
+                    success = valueInt != -1 && valueInt < valueMatch;
                     break;
                 }
                 case "ge": {
-                    success = valueInt != -1 && valueMatch >= valueInt;
+                    success = valueInt != -1 && valueInt >= valueMatch;
                     break;
                 }
                 case "le": {
-                    success = valueInt != -1 && valueMatch <= valueInt;
+                    success = valueInt != -1 && valueInt <= valueMatch;
                     break;
                 }
                 case "ne": {
-                    success = valueInt != -1 && valueMatch != valueInt;
+                    success = valueInt != -1 && valueInt != valueMatch;
                     break;
                 }
                 default: {
@@ -152,6 +153,7 @@ public class RomInfoMatcher {
                 }
             }
         }
+        Log.d("test_access", "matchValue:" + value + "-->" + condition + "-->" + valueToMatch + ", res:" + success);
         return success;
     }
 }

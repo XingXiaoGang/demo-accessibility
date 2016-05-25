@@ -2,6 +2,7 @@ package com.example.accessibility.hanlder;
 
 import android.accessibilityservice.AccessibilityService;
 import android.annotation.TargetApi;
+import android.content.Context;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
@@ -9,6 +10,7 @@ import android.util.Log;
 import android.view.accessibility.AccessibilityNodeInfo;
 
 import com.example.accessibility.R;
+import com.example.accessibility.bean.node.ScrollNode;
 
 import java.util.Collections;
 import java.util.List;
@@ -18,7 +20,8 @@ import java.util.List;
  * 抽象了一些常用方法
  */
 public abstract class BaseTaskHandler extends Handler implements ITaskHandler {
-    private static final String TAG = "test_handler";
+
+    protected static final String TAG = "test_handler";
 
     private AccessibilityService service;
 
@@ -58,13 +61,13 @@ public abstract class BaseTaskHandler extends Handler implements ITaskHandler {
      * @param parents 第几层父布局,默认为0,负数则表示第几层子布局
      **/
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
-    private AccessibilityNodeInfo findNode(String key, int method, int index, int parents) {
+    protected final AccessibilityNodeInfo findNode(String key, int method, int index, int parents) {
         AccessibilityNodeInfo accessibilityNodeInfo = null;
         final AccessibilityNodeInfo root = getRootNode();
         if (root == null) {
             return null;
         }
-        List<AccessibilityNodeInfo> nodeInfos = Collections.EMPTY_LIST;
+        List<AccessibilityNodeInfo> nodeInfos = null;
         switch (method) {
             case 0: {
                 nodeInfos = root.findAccessibilityNodeInfosByText(key);
@@ -74,6 +77,9 @@ public abstract class BaseTaskHandler extends Handler implements ITaskHandler {
                 nodeInfos = root.findAccessibilityNodeInfosByViewId(key);
                 break;
             }
+        }
+        if (nodeInfos == null) {
+            nodeInfos = Collections.EMPTY_LIST;
         }
         if (!nodeInfos.isEmpty()) {
             accessibilityNodeInfo = nodeInfos.size() > index ? nodeInfos.get(index) : nodeInfos.get(0);
@@ -92,6 +98,136 @@ public abstract class BaseTaskHandler extends Handler implements ITaskHandler {
             }
         }
         return accessibilityNodeInfo;
+    }
+
+    @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
+    protected final AccessibilityNodeInfo finNode(String key, String className) {
+        AccessibilityNodeInfo accessibilityNodeInfo = null;
+        final AccessibilityNodeInfo root = getRootNode();
+        if (root == null) {
+            return null;
+        }
+        List<AccessibilityNodeInfo> nodeInfos = root.findAccessibilityNodeInfosByViewId(key);
+        if (nodeInfos == null) {
+            nodeInfos = Collections.EMPTY_LIST;
+        }
+        if (!nodeInfos.isEmpty()) {
+            if (className != null) {
+                for (AccessibilityNodeInfo nodeInfo : nodeInfos) {
+                    if (nodeInfo.getClassName().toString().equals(className)) {
+                        accessibilityNodeInfo = nodeInfo;
+                        break;
+                    }
+                }
+            } else {
+                accessibilityNodeInfo = nodeInfos.get(0);
+            }
+        }
+        return accessibilityNodeInfo;
+    }
+
+    //这里的遍历不能用递归 很蛋疼
+    protected final boolean scrollNode(ScrollNode scrollNode) {
+        final String className = scrollNode.className;
+        final AccessibilityNodeInfo root = getRootNode();
+        if (root == null) {
+            return false;
+        }
+        AccessibilityNodeInfo res = null;
+
+        out:
+        for (int i = 0; i < root.getChildCount(); i++) {
+            AccessibilityNodeInfo temp = root.getChild(i);
+            if (className.contains(temp.getClassName().toString())) {
+                res = temp;
+                break out;
+            } else if (temp.getChildCount() > 0) {
+                for (int j = 0; j < temp.getChildCount(); j++) {
+                    AccessibilityNodeInfo temp1 = temp.getChild(j);
+                    if (className.contains(temp1.getClassName().toString())) {
+                        res = temp1;
+                        break out;
+                    } else if (temp1.getChildCount() > 0) {
+                        for (int k = 0; k < temp1.getChildCount(); k++) {
+                            AccessibilityNodeInfo temp2 = temp1.getChild(k);
+                            if (className.contains(temp2.getClassName().toString())) {
+                                res = temp2;
+                                break out;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return res != null && res.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD);
+    }
+
+    //智能点击
+    protected final boolean intelligentClickNode(AccessibilityNodeInfo nodeInfo) {
+        boolean res = false;
+        if (nodeInfo.isClickable()) {
+            res = nodeInfo.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+        }
+        //往上一层找
+        if (!res) {
+            AccessibilityNodeInfo parent = nodeInfo.getParent();
+            if (parent.isClickable()) {
+                res = parent.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+            }
+            if (!res) {
+                int childCount = parent.getChildCount();
+                //找同级别的
+                for (int i = 0; i < childCount; i++) {
+                    AccessibilityNodeInfo accessibilityNodeInfo = parent.getChild(i);
+                    if (!res && accessibilityNodeInfo.isClickable()) {
+                        res = accessibilityNodeInfo.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                    }
+                }
+            }
+            //往上二层
+            if (!res) {
+                AccessibilityNodeInfo parentP = parent.getParent();
+                if (parentP != null && parentP.isClickable()) {
+                    res = parentP.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                }
+            }
+        }
+        Log.d("test_access", "intelligentClickNode res:" + res);
+        return res;
+    }
+
+    //智能点击
+    protected final boolean intelligentCheckNode(AccessibilityNodeInfo nodeInfo) {
+        boolean res = false;
+        if (nodeInfo.isCheckable()) {
+            res = nodeInfo.isChecked() || nodeInfo.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+        }
+        //往上一层找
+        if (!res) {
+            AccessibilityNodeInfo parent = nodeInfo.getParent();
+            if (parent.isCheckable()) {
+                res = parent.isChecked() || parent.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+            }
+            if (!res) {
+                int childCount = parent.getChildCount();
+                //找同级别的
+                for (int i = 0; i < childCount; i++) {
+                    AccessibilityNodeInfo brotherNode = parent.getChild(i);
+                    if (!res && brotherNode.isCheckable()) {
+                        res = brotherNode.isChecked() || brotherNode.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                    }
+                }
+            }
+            //往上二层
+            if (!res) {
+                AccessibilityNodeInfo parentP = parent.getParent();
+                if (parentP != null && parentP.isCheckable()) {
+                    res = parentP.isChecked() || parentP.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                }
+            }
+        }
+        Log.d("test_access", "intelligentCheckNode res:" + res);
+        return res;
     }
 
     protected final String getViewId(String idstr) {
@@ -119,14 +255,13 @@ public abstract class BaseTaskHandler extends Handler implements ITaskHandler {
         }
     }
 
-    //    protected final void finishAccessibility() {
-//        Intent intent = new Intent(Statics.ACCESSIBILITY_SERVER_ACTION);
-//        intent.putExtra(Statics.Key.COMMAND, Statics.STOP);
-//        LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(getService().getApplication());
-//        localBroadcastManager.sendBroadcast(intent);
-//    }
+    public Context getContext() {
+        return service;
+    }
 
-    /**************************任务重试**************************/
+    /**************************
+     * 任务重试
+     **************************/
 
     protected final void retryTask(long timeDelay, String id) {
         retryTask(timeDelay, id, 1);

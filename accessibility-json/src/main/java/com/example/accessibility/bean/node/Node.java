@@ -8,6 +8,11 @@ import com.google.gson.annotations.SerializedName;
  */
 public abstract class Node {
 
+    //className
+    @Expose
+    @SerializedName("class_name")
+    public String className;
+
     //要匹配的文本
     @Expose
     @SerializedName("find_texts")
@@ -20,7 +25,6 @@ public abstract class Node {
 
     //className
     @Expose
-    @SerializedName("class_name")
-    public String className;
-
+    @SerializedName("item_index")
+    public int itemIndex;
 }

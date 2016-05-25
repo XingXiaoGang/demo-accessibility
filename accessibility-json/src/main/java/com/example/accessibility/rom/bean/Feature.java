@@ -10,11 +10,11 @@ import com.google.gson.annotations.SerializedName;
  */
 public class Feature extends Base {
     @Expose
-    @SerializedName("rom_name")
+    @SerializedName("key")
     public String key;
 
     @Expose
-    @SerializedName("rom_name")
+    @SerializedName("value")
     public String value;
 
     @Expose

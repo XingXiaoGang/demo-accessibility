@@ -10,19 +10,45 @@
         android:id="@+id/state_text_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/open_dialog"
+        android:layout_above="@+id/contentPanel"
         android:layout_gravity="center"
         android:layout_marginBottom="20dp"
         android:gravity="center"
         android:text="当前状态"
         android:textSize="16dp" />
 
-    <Button
-        android:id="@+id/open_dialog"
+    <LinearLayout
+        android:id="@+id/contentPanel"
         android:layout_width="match_parent"
-        android:layout_height="50dp"
+        android:layout_height="wrap_content"
         android:layout_centerInParent="true"
-        android:enabled="false"
-        android:text="开始验证指纹" />
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <Button
+            android:id="@+id/open_dialog"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_centerInParent="true"
+            android:enabled="false"
+            android:text="开始验证指纹" />
+
+        <Button
+            android:id="@+id/open_accessibility_permission"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_centerInParent="true"
+            android:text="打开辅助权限" />
+
+
+        <Button
+            android:id="@+id/start_accessibility"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_centerInParent="true"
+            android:text="开始辅助设置" />
+
+    </LinearLayout>
+
 
 </RelativeLayout>

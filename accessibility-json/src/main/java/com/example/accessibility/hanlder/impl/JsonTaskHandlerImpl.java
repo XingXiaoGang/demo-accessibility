@@ -158,7 +158,6 @@ public class JsonTaskHandlerImpl extends BaseTaskHandler {
             intent.putExtra(Statics.Key.CODE, msg.arg1);
             intent.putExtra(Statics.Key.MESSAGE, String.valueOf(msg.obj));
             sendBroadcastToClient(intent);
-
         } else if (msg.what == R.id.action_progress_update) {
             Intent intent = new Intent(Statics.ACCESSIBILITY_CLIENT_ACTION);
             intent.putExtra(Statics.Key.ACTION, R.id.action_progress_update);

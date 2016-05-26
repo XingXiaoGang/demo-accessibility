@@ -2,10 +2,12 @@ package com.example.accessibility;
 
 import android.app.Application;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Build;
+import android.provider.Settings;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
@@ -67,7 +69,17 @@ public class AccessibilityClient {
      * 开始执行
      **/
     public void startSettingAccessibility() {
-        senBroadCastToService(R.id.action_start);
+        if (isPermissionEnabled()) {
+            senBroadCastToService(R.id.action_start);
+        } else if (mListener != null) {
+            mListener.onError(Statics.Code.ERROR_CODE_NO_PERMISSION, "没有辅助功能权限");
+        }
+    }
+
+    protected final boolean isPermissionEnabled() {
+        ComponentName componentName = new ComponentName(mApplication, SettingAccessibilityService.class);
+        String settingValue = Settings.Secure.getString(mApplication.getContentResolver(), Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES);
+        return settingValue.contains(componentName.flattenToString());
     }
 
     public void finishSettingAccessbility() {

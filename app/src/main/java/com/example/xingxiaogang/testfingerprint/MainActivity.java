@@ -86,8 +86,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.start_accessibility: {
                 AccessibilityClient client = AccessibilityClient.getInstance(getApplication());
                 if (client.isSupportAccessibility()) {
-                    client.startSettingAccessibility();
                     client.setCallBack(this);
+                    client.startSettingAccessibility();
+                } else {
+                    Toast.makeText(getApplicationContext(), "暂不支持本机型!", Toast.LENGTH_LONG).show();
                 }
                 break;
             }

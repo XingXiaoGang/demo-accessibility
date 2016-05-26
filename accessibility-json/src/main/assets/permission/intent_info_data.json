@@ -6,7 +6,7 @@
       "describe": "打开悬浮窗设置界面(xiaomi v6 v7)",
       "package": "com.miui.securitycenter",
       "activity": "com.miui.permcenter.permissions.AppPermissionsEditorActivity",
-      "extra": "extra_pkgname=com.cmcm.locker"
+      "extra": "extra_pkgname=com.example.xingxiaogang.testfingerprint"
     },
     {
       "id": 2,
@@ -18,7 +18,7 @@
       "describe": "打开照相机权限开启界面(xiaomi v6 v7)",
       "package": "com.miui.securitycenter",
       "activity": "com.miui.permcenter.permissions.AppPermissionsEditorActivity",
-      "extra": "extra_pkgname=com.cmcm.locker"
+      "extra": "extra_pkgname=com.example.xingxiaogang.testfingerprint"
     },
     {
       "id": 4,
@@ -30,7 +30,7 @@
       "id": 5,
       "describe": "打开悬浮窗设置界面(xiaomi v5)",
       "package": "com.android.settings",
-      "data": "package:com.cmcm.locker",
+      "data": "package:com.example.xingxiaogang.testfingerprint",
       "action": "android.settings.APPLICATION_DETAILS_SETTINGS"
     },
     {
@@ -87,7 +87,7 @@
       "package": "com.android.settings",
       "package1": "com.huawei.systemmanager",
       "package2": "com.android.packageinstaller",
-      "data": "package:com.cmcm.locker",
+      "data": "package:com.example.xingxiaogang.testfingerprint",
       "action": "android.settings.APPLICATION_DETAILS_SETTINGS"
     },
     {

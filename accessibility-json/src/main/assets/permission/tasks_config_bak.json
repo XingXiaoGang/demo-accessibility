@@ -223,6 +223,13 @@
     },
     {
       "rom": 17,
+      "title": "HUAWEIemui4.0-正在获取应用信任权限...6.0",
+      "process_id": 104,
+      "type": 4,
+      "priority": 1
+    },
+    {
+      "rom": 17,
       "title": "HUAWEIemui4.0-正在获取通知栏权限...6.0",
       "process_id": 2,
       "type": 2,

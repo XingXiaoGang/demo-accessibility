@@ -1,6 +1,5 @@
 package com.example.accessibility.hanlder;
 
-import android.accessibilityservice.AccessibilityService;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.os.Build;
@@ -8,6 +7,7 @@ import android.os.Handler;
 import android.util.Log;
 import android.view.accessibility.AccessibilityNodeInfo;
 
+import com.example.accessibility.SettingAccessibilityService;
 import com.example.accessibility.bean.node.ScrollNode;
 
 import java.util.Collections;
@@ -20,13 +20,13 @@ import java.util.List;
 public abstract class BaseTaskHandler extends Handler implements ITaskHandler {
 
     protected static final String TAG = "test_access";
-    private AccessibilityService service;
+    private SettingAccessibilityService service;
 
-    protected BaseTaskHandler(AccessibilityService service) {
+    protected BaseTaskHandler(SettingAccessibilityService service) {
         this.service = service;
     }
 
-    protected final AccessibilityService getService() {
+    protected final SettingAccessibilityService getService() {
         return service;
     }
 

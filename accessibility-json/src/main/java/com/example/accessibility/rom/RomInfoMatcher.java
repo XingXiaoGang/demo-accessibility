@@ -125,7 +125,7 @@ public class RomInfoMatcher {
 
             switch (condition) {
                 case "equal": {
-                    success = valueToMatch.equals(value);
+                    success = valueToMatch.equalsIgnoreCase(value);
                     break;
                 }
                 case "greater": {

@@ -2,9 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/accessibility-json/accessibility-json.iml" filepath="$PROJECT_DIR$/accessibility-json/accessibility-json.iml" />
       <module fileurl="file://$PROJECT_DIR$/accessibility-json/accessibility2.iml" filepath="$PROJECT_DIR$/accessibility-json/accessibility2.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/module-accessibility-json/module-accessibility-json.iml" filepath="$PROJECT_DIR$/module-accessibility-json/module-accessibility-json.iml" />
       <module fileurl="file://$PROJECT_DIR$/testFingerPrint.iml" filepath="$PROJECT_DIR$/testFingerPrint.iml" />
     </modules>
   </component>

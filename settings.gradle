@@ -1,1 +1,1 @@
-include ':app', ':accessibility-json'
+include ':app', ':module-accessibility-json'

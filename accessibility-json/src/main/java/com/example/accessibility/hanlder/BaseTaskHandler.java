@@ -5,11 +5,9 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.os.Build;
 import android.os.Handler;
-import android.os.Message;
 import android.util.Log;
 import android.view.accessibility.AccessibilityNodeInfo;
 
-import com.example.accessibility.R;
 import com.example.accessibility.bean.node.ScrollNode;
 
 import java.util.Collections;
@@ -21,8 +19,7 @@ import java.util.List;
  */
 public abstract class BaseTaskHandler extends Handler implements ITaskHandler {
 
-    protected static final String TAG = "test_handler";
-
+    protected static final String TAG = "test_access";
     private AccessibilityService service;
 
     protected BaseTaskHandler(AccessibilityService service) {
@@ -33,21 +30,25 @@ public abstract class BaseTaskHandler extends Handler implements ITaskHandler {
         return service;
     }
 
+    public Context getContext() {
+        return service;
+    }
+
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
     protected final AccessibilityNodeInfo getRootNode() {
         return service.getRootInActiveWindow();
     }
 
-    protected final AccessibilityNodeInfo findNodeById(String id, int parents) {
-        return findNodeById(id, 0, parents);
+    protected final AccessibilityNodeInfo findNodeById(String id, int index) {
+        return findNodeById(id, index, 0);
     }
 
     protected final AccessibilityNodeInfo findNodeById(String id, int index, int parents) {
         return findNode(id, 1, index, parents);
     }
 
-    protected final AccessibilityNodeInfo findNodeByText(String id, int parents) {
-        return findNodeById(id, 0, parents);
+    protected final AccessibilityNodeInfo findNodeByText(String id, int index) {
+        return findNodeById(id, index, 0);
     }
 
     protected final AccessibilityNodeInfo findNodeByText(String id, int index, int parents) {
@@ -192,7 +193,7 @@ public abstract class BaseTaskHandler extends Handler implements ITaskHandler {
                 }
             }
         }
-        Log.d("test_access", "intelligentClickNode res:" + res);
+        Log.d(TAG, "intelligentClickNode res:" + res);
         return res;
     }
 
@@ -230,14 +231,6 @@ public abstract class BaseTaskHandler extends Handler implements ITaskHandler {
         return res;
     }
 
-    protected final String getViewId(String idstr) {
-        return service.getPackageName() + ":id/" + idstr;
-    }
-
-    protected final boolean performNodeAction(AccessibilityNodeInfo nodeInfo, int action) {
-        return nodeInfo != null && nodeInfo.performAction(action);
-    }
-
     protected final void printChilds(AccessibilityNodeInfo root) {
         if (root != null) {
             Log.d(TAG, "====root start======name:" + root.getClassName() + ",child:" + root.getChildCount());
@@ -253,53 +246,5 @@ public abstract class BaseTaskHandler extends Handler implements ITaskHandler {
         } else {
             Log.d(TAG, "====root is null=======");
         }
-    }
-
-    public Context getContext() {
-        return service;
-    }
-
-    /**************************
-     * 任务重试
-     **************************/
-
-    protected final void retryTask(long timeDelay, String id) {
-        retryTask(timeDelay, id, 1);
-    }
-
-    protected final void retryTask(long timeDelay, String id, int tryTimes) {
-        if (id == null) {
-            throw new RuntimeException("id can't be null");
-        }
-        if (tryTimes < 1) {
-            throw new RuntimeException("tryTimes should >=1");
-        }
-        Message message = obtainMessage(R.id.retry_task, id);
-        message.arg1 = tryTimes;
-        message.arg2 = (int) timeDelay;
-        sendMessageDelayed(message, timeDelay);
-    }
-
-    @Override
-    public void handleMessage(Message msg) {
-        super.handleMessage(msg);
-        if (msg.what == R.id.retry_task) {
-            int times = msg.arg1;
-            int timeDelay = msg.arg2;
-            String id = (String) msg.obj;
-            boolean success = onRetryTask(id);
-            //不成功则重试
-            if (!success) {
-                if (times > 1) {
-                    Message message = obtainMessage(R.id.retry_task, id);
-                    message.arg1 = --times;
-                    sendMessageDelayed(message, timeDelay);
-                }
-            }
-        }
-    }
-
-    protected boolean onRetryTask(String id) {
-        return false;
     }
 }

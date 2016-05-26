@@ -35,7 +35,7 @@ public class AccessibilityClient {
         this.mApplication = application;
 
         IntentFilter intentFilter = new IntentFilter(Statics.ACCESSIBILITY_CLIENT_ACTION);
-        application.registerReceiver(new AccessibilityBroadCastReceiver(), intentFilter);
+        LocalBroadcastManager.getInstance(mApplication).registerReceiver(new AccessibilityBroadCastReceiver(), intentFilter);
     }
 
     public RomInfo getRomInfo() {
@@ -67,14 +67,14 @@ public class AccessibilityClient {
      * 开始执行
      **/
     public void startSettingAccessibility() {
-        senBroadCast(R.id.action_start);
+        senBroadCastToService(R.id.action_start);
     }
 
     public void finishSettingAccessbility() {
-        senBroadCast(R.id.action_finish);
+        senBroadCastToService(R.id.action_finish);
     }
 
-    public void senBroadCast(int action) {
+    public void senBroadCastToService(int action) {
         Intent intent = new Intent(Statics.ACCESSIBILITY_SERVER_ACTION);
         intent.putExtra(Statics.Key.ACTION, action);
         LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(mApplication);
@@ -82,7 +82,7 @@ public class AccessibilityClient {
     }
 
     public interface AccessibilityTaskHandlerCallBack {
-        void onErro(int code, String msg);
+        void onError(int code, String msg);
 
         void onProgressUpdate(int all, int progress, String description);
 
@@ -99,7 +99,7 @@ public class AccessibilityClient {
                     if (mListener != null) {
                         int errorCode = intent.getIntExtra(Statics.Key.CODE, -1);
                         String msg = intent.getStringExtra(Statics.Key.MESSAGE);
-                        mListener.onErro(errorCode, msg);
+                        mListener.onError(errorCode, msg);
                     }
                 } else if (code == R.id.action_progress_update) {
                     if (mListener != null) {

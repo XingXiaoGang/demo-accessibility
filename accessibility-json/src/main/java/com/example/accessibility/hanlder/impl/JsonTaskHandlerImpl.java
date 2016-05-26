@@ -4,14 +4,15 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Handler;
 import android.os.Message;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
-import android.widget.Toast;
 
 import com.example.accessibility.AccessibilityClient;
+import com.example.accessibility.BuildConfig;
 import com.example.accessibility.R;
 import com.example.accessibility.SettingAccessibilityService;
 import com.example.accessibility.Statics;
@@ -41,14 +42,15 @@ import java.util.Set;
  */
 public class JsonTaskHandlerImpl extends BaseTaskHandler {
 
-    private List<TaskInfo> mTaskInfos;
-    private Map<Integer, ProcessInfo> mProcessInfosMap;
-    private Map<Integer, IntentInfo> mIntentInfosMap;
-    private Map<Integer, ActionInfo> mActionInfosMap;
+    protected static final String TAG = "test_access";
 
-    private ProcessInfo mCurrentProcessInfo;
-    private ExcuteTask mExcuteTask;
-    private boolean isRunnig;
+    private List<TaskInfo> mTaskInfo;
+    private Map<Integer, ProcessInfo> mProcessInfoMap;
+    private Map<Integer, IntentInfo> mIntentInfoMap;
+    private Map<Integer, ActionInfo> mActionInfoMap;
+
+    private ExecuteTask mExecuteTask;
+    private boolean isRunning;
 
     public JsonTaskHandlerImpl(SettingAccessibilityService service) {
         super(service);
@@ -66,25 +68,31 @@ public class JsonTaskHandlerImpl extends BaseTaskHandler {
 
     @Override
     public void stop() {
-
+        if (mExecuteTask != null) {
+            mExecuteTask.interrupt = true;
+        }
     }
 
     @Override
     public void finish() {
-
+        if (mExecuteTask != null) {
+            mExecuteTask.interrupt = true;
+            isRunning = false;
+        }
     }
 
     @Override
     public boolean isRunning() {
-        return false;
+        return isRunning;
     }
 
     @Override
     public boolean isPrepared() {
-        final List<TaskInfo> taskInfos = mTaskInfos;
-        final Map<Integer, ProcessInfo> processInfosMap = mProcessInfosMap;
-        final Map<Integer, IntentInfo> intentInfosMap = mIntentInfosMap;
-        final Map<Integer, ActionInfo> actionInfosMap = mActionInfosMap;
+        boolean isOk = true;
+        final List<TaskInfo> taskInfos = mTaskInfo;
+        final Map<Integer, ProcessInfo> processInfosMap = mProcessInfoMap;
+        final Map<Integer, IntentInfo> intentInfosMap = mIntentInfoMap;
+        final Map<Integer, ActionInfo> actionInfosMap = mActionInfoMap;
         //合法性查检
         if (taskInfos != null && !taskInfos.isEmpty() && processInfosMap != null && !processInfosMap.isEmpty() && intentInfosMap != null && !intentInfosMap.isEmpty() && actionInfosMap != null && !actionInfosMap.isEmpty()) {
             for (TaskInfo taskInfo : taskInfos) {
@@ -92,25 +100,41 @@ public class JsonTaskHandlerImpl extends BaseTaskHandler {
                 if (processInfo != null) {
                     final IntentInfo intentInfo = intentInfosMap.get(processInfo.intentId);
                     if (intentInfo == null) {
-                        throw new RuntimeException("accessibility json error :Id为 " + taskInfo.processId + " 的IntentInfo未配置");
+                        isOk = false;
+                        if (BuildConfig.DEBUG) {
+                            throw new RuntimeException("accessibility json error :Id为 " + taskInfo.processId + " 的IntentInfo未配置");
+                        }
                     }
                     if (processInfo.actionId == null || processInfo.actionId.length == 0) {
-                        throw new RuntimeException("accessibility json error :ProcessInfo 里的Action未配置");
-                    }
-                    for (int i : processInfo.actionId) {
-                        final ActionInfo actionInfo = actionInfosMap.get(i);
-                        if (actionInfo == null) {
-                            throw new RuntimeException("accessibility json error :Id为 " + i + " 的ActionInfo未配置");
+                        isOk = false;
+                        if (BuildConfig.DEBUG) {
+                            throw new RuntimeException("accessibility json error :ProcessInfo 里的Action未配置");
+                        }
+                    } else {
+                        for (int i : processInfo.actionId) {
+                            final ActionInfo actionInfo = actionInfosMap.get(i);
+                            if (actionInfo == null) {
+                                isOk = false;
+                                if (BuildConfig.DEBUG) {
+                                    throw new RuntimeException("accessibility json error :Id为 " + i + " 的ActionInfo未配置");
+                                }
+                            }
                         }
                     }
                 } else {
-                    throw new RuntimeException("accessibility json error :Id为 " + taskInfo.processId + " 的ProcessInfo未配置");
+                    isOk = false;
+                    if (BuildConfig.DEBUG) {
+                        throw new RuntimeException("accessibility json error :Id为 " + taskInfo.processId + " 的ProcessInfo未配置");
+                    }
                 }
             }
         } else {
-            throw new RuntimeException("accessibility json error:json信息不完整");
+            isOk = false;
+            if (BuildConfig.DEBUG) {
+                throw new RuntimeException("accessibility json error:json信息不完整");
+            }
         }
-        return true;
+        return isOk;
     }
 
     @Override
@@ -118,14 +142,15 @@ public class JsonTaskHandlerImpl extends BaseTaskHandler {
         super.handleMessage(msg);
         if (msg.what == R.id.parse_json_return) {
             if (isPrepared()) {
-                //加载json成功 进入执行
-                Log.e("test_access", "开始执行辅助操作...");
-                mExcuteTask = new ExcuteTask();
-                mExcuteTask.start();
-                isRunnig = true;
+                //加载json成功 进入执行入口
+                Log.e(TAG, "开始执行辅助操作...");
+                mExecuteTask = new ExecuteTask(this);
+                mExecuteTask.start();
+                isRunning = true;
             } else {
                 //信息初始化失败
-                Log.e("test_access", "中断：json配置信息初始化失败");
+                Log.e(TAG, "中断：json配置信息初始化失败");
+                sendErrorMsg(Statics.Code.ERROR_CODE_JSON_PREPARE_FAILED, "ERROR_CODE_JSON_PREPARE_FAILED:json配置信息初始化失败");
             }
         } else if (msg.what == R.id.action_error) {
             Intent intent = new Intent(Statics.ACCESSIBILITY_CLIENT_ACTION);
@@ -139,15 +164,22 @@ public class JsonTaskHandlerImpl extends BaseTaskHandler {
             intent.putExtra(Statics.Key.ACTION, R.id.action_progress_update);
             intent.putExtra(Statics.Key.PROGRESS_ALL, msg.arg1);
             intent.putExtra(Statics.Key.PROGRESS, msg.arg2);
-            intent.putExtra(Statics.Key.MESSAGE, String.valueOf(msg));
+            intent.putExtra(Statics.Key.MESSAGE, String.valueOf(msg.obj));
             sendBroadcastToClient(intent);
         } else if (msg.what == R.id.action_finish) {
             Intent intent = new Intent(Statics.ACCESSIBILITY_CLIENT_ACTION);
             intent.putExtra(Statics.Key.ACTION, R.id.action_finish);
             intent.putExtra(Statics.Key.SUCCESS, msg.arg1 == 0);
             sendBroadcastToClient(intent);
-            Toast.makeText(getService(), "所有操作已执行完成" + (msg.arg1 == 0), Toast.LENGTH_LONG).show();
         }
+    }
+
+    //通信
+    private void sendErrorMsg(int code, String msg) {
+        Message message = obtainMessage(R.id.action_error);
+        message.arg1 = code;
+        message.obj = msg;
+        sendMessage(message);
     }
 
     //通信
@@ -175,21 +207,21 @@ public class JsonTaskHandlerImpl extends BaseTaskHandler {
                 //获得对应rom的辅助任务信息
                 final TasksParser.TasksResult result = new TasksParser(mContext, romId).parse();
                 if (result != null) {
-                    JsonTaskHandlerImpl.this.mTaskInfos = result.taskInfos;
-                    int[] taskIds = new int[mTaskInfos.size()];
-                    for (int i = 0; i < mTaskInfos.size(); i++) {
-                        taskIds[i] = mTaskInfos.get(i).processId;
+                    JsonTaskHandlerImpl.this.mTaskInfo = result.taskInfos;
+                    int[] taskIds = new int[mTaskInfo.size()];
+                    for (int i = 0; i < mTaskInfo.size(); i++) {
+                        taskIds[i] = mTaskInfo.get(i).processId;
                     }
                     //获得对应辅助任务的具体执行信息
                     final ProcessParser.ProcessInfoResult result1 = new ProcessParser(mContext, taskIds).parse();
                     if (result1 != null) {
-                        JsonTaskHandlerImpl.this.mProcessInfosMap = result1.processInfos;
+                        JsonTaskHandlerImpl.this.mProcessInfoMap = result1.processInfos;
 
                         //待解析的id集合
-                        int[] intentIds = new int[mProcessInfosMap.size()];
+                        int[] intentIds = new int[mProcessInfoMap.size()];
                         List<int[]> actionIds = new ArrayList<>();
 
-                        Set<Map.Entry<Integer, ProcessInfo>> set = mProcessInfosMap.entrySet();
+                        Set<Map.Entry<Integer, ProcessInfo>> set = mProcessInfoMap.entrySet();
                         Iterator<Map.Entry<Integer, ProcessInfo>> iterator = set.iterator();
                         int index = 0;
                         while (iterator.hasNext()) {
@@ -199,18 +231,18 @@ public class JsonTaskHandlerImpl extends BaseTaskHandler {
                             actionIds.add(info.actionId);
                             index++;
                         }
-                        for (int i = 0; i < mTaskInfos.size(); i++) {
-                            taskIds[i] = mTaskInfos.get(i).processId;
+                        for (int i = 0; i < mTaskInfo.size(); i++) {
+                            taskIds[i] = mTaskInfo.get(i).processId;
                         }
                         //获得具体执行的具体intent 和 关键字等信息
                         final IntentParser.IntentResult result2 = new IntentParser(mContext, intentIds).parse();
                         final ActionParser.ActionResult result3 = new ActionParser(mContext, actionIds).parse();
 
                         if (result2 != null) {
-                            JsonTaskHandlerImpl.this.mIntentInfosMap = result2.intentInfo;
+                            JsonTaskHandlerImpl.this.mIntentInfoMap = result2.intentInfo;
                         }
                         if (result3 != null) {
-                            JsonTaskHandlerImpl.this.mActionInfosMap = result3.actionInfo;
+                            JsonTaskHandlerImpl.this.mActionInfoMap = result3.actionInfo;
                         }
                     }
                 }
@@ -220,36 +252,36 @@ public class JsonTaskHandlerImpl extends BaseTaskHandler {
     }
 
     //执行核心
-    private class ExcuteTask extends Thread {
+    private class ExecuteTask extends Thread {
 
         private int current;
         private boolean interrupt;
+        private Handler mHandler;
 
-        public ExcuteTask() {
-
+        public ExecuteTask(Handler handler) {
+            this.mHandler = handler;
         }
 
         @Override
         public void run() {
             super.run();
 
-            final List<TaskInfo> taskInfos = mTaskInfos;
-            final Map<Integer, ProcessInfo> processInfosMap = mProcessInfosMap;
-            final Map<Integer, IntentInfo> intentInfosMap = mIntentInfosMap;
-            final Map<Integer, ActionInfo> actionInfosMap = mActionInfosMap;
+            final List<TaskInfo> taskInfos = mTaskInfo;
+            final Map<Integer, ProcessInfo> processInfosMap = mProcessInfoMap;
+            final Map<Integer, IntentInfo> intentInfosMap = mIntentInfoMap;
+            final Map<Integer, ActionInfo> actionInfosMap = mActionInfoMap;
 
             boolean hasErro = false;
             int erroCode = -1;
             for (int i = 0; i < taskInfos.size(); i++) {
                 final TaskInfo taskInfo = taskInfos.get(i);
                 //通知进度
-                current = i;
+                current = i + 1;
                 Message message = obtainMessage(R.id.action_progress_update, taskInfos.size(), current, taskInfo.title);
-                sendMessage(message);
+                mHandler.sendMessage(message);
 
                 final ProcessInfo processInfo = processInfosMap.get(taskInfo.processId);
-                mCurrentProcessInfo = processInfo;
-                Log.w("test_access", "开始辅助项目:" + processInfo.describe);
+                Log.w(TAG, "开始辅助项目:" + processInfo.describe);
                 //最终执行要用到的信息
                 final IntentInfo intentInfo = intentInfosMap.get(processInfo.intentId);
                 final List<ActionInfo> actions = new ArrayList<>();
@@ -262,36 +294,34 @@ public class JsonTaskHandlerImpl extends BaseTaskHandler {
                     erroCode = intentInfo.id;
 
                     //通知错误
-                    Message msg = obtainMessage(R.id.action_error, erroCode, 0, "task exec failed:intentId:" + erroCode + ",action:" + actions);
-                    sendMessage(msg);
-
-                    Log.w("test_access", "辅助项目执行失败：" + actions);
+                    sendErrorMsg(Statics.Code.ERROR_CODE_INTENT_ACTION_FAILED, "task exec failed:intentId:" + erroCode + ",action:" + actions);
+                    Log.w(TAG, "辅助项目执行失败：" + actions);
                 }
 
                 if (interrupt) {
-                    //通知错误
-                    Message msg = obtainMessage(R.id.action_error, erroCode, 0, "taskInterrupt.");
-                    sendMessage(msg);
-                    Log.e("test_access", "辅助功能中断");
+                    //通知中断
+                    sendErrorMsg(Statics.Code.ERROR_CODE_INTERRUPT, "taskInterrupt.");
+                    Log.e(TAG, "辅助功能中断");
                     break;
                 }
             }
             //通知完成
             Message message = obtainMessage(R.id.action_finish, hasErro ? 1 : 0, erroCode);
-            sendMessage(message);
-            Log.e("test_access", "辅助操作执行完毕.... has error:" + hasErro);
+            mHandler.sendMessage(message);
+            isRunning = false;
+            Log.e(TAG, "辅助操作执行完毕.... has error:" + hasErro);
         }
 
         /**
          * todo 有待改善一下json结构 以更好的适匹一个操作涉及多个包名的情况，即 ProcessInfo里面的 intent_id也改为数组
          **/
         private boolean startAction(final IntentInfo intentInfo, final List<ActionInfo> actionInfo) {
-            Log.d("test_access", "====startAction====" + intentInfo);
+            Log.d(TAG, "====startAction====" + intentInfo);
             final List<Intent> intentList = createIntent(intentInfo);
             if (intentList.size() == 1) {
                 final Intent intent = intentList.get(0);
                 if (runAction(intent, actionInfo)) {
-                    Log.e("test_access", "runAction 失败1：" + actionInfo);
+                    Log.e(TAG, "runAction 失败1：" + actionInfo);
                 }
                 if (interrupt) {
                     return false;
@@ -300,24 +330,24 @@ public class JsonTaskHandlerImpl extends BaseTaskHandler {
                 for (int i = 0; i < intentList.size(); i++) {
                     final Intent intent = intentList.get(i);
                     if (runAction(intent, actionInfo)) {
-                        Log.e("test_access", "runAction 失败2：" + actionInfo);
+                        Log.e(TAG, "runAction 失败2：" + actionInfo);
                     }
                 }
             } else {
                 throw new RuntimeException("不支持的对应关系：intent数量和action数量不一一致!");
             }
-            Log.w("test_access", "辅助项目完成:" + intentInfo.id);
+            Log.w(TAG, "辅助项目完成:" + intentInfo.id);
             return true;
         }
 
         private boolean runAction(Intent intent, List<ActionInfo> actionInfos) {
-            Log.w("test_access", "runAction：" + actionInfos);
+            Log.w(TAG, "runAction：" + actionInfos);
             IntentUtils.startActivity(getService(), intent);
             for (int i = 0; i < actionInfos.size(); i++) {
                 final ActionInfo actionInfo = actionInfos.get(i);
                 //窗口等待
                 if (actionInfo.needWaitWindow) {
-                    Log.d("test_access", "sleep:" + actionInfo.needWaitTime);
+                    Log.d(TAG, "sleep:" + actionInfo.needWaitTime);
                     try {
                         Thread.sleep(actionInfo.needWaitTime);
                     } catch (InterruptedException e) {
@@ -325,7 +355,7 @@ public class JsonTaskHandlerImpl extends BaseTaskHandler {
                     }
                 } else {
                     //为了增加兼容性 强制等待300毫秒
-                    Log.d("test_access", "sleep：300");
+                    Log.d(TAG, "sleep：300");
                     try {
                         Thread.sleep(300);
                     } catch (InterruptedException e) {
@@ -367,7 +397,7 @@ public class JsonTaskHandlerImpl extends BaseTaskHandler {
                             e.printStackTrace();
                         }
                         nodeInfo = findNodeInRoot(locateNode);
-                        Log.d("test_access", "查找重试 time:" + tryTimes + ",res:" + (nodeInfo != null));
+                        Log.d(TAG, "查找重试 time:" + tryTimes + ",res:" + (nodeInfo != null));
                         if (nodeInfo != null) {
                             break;
                         }
@@ -376,18 +406,16 @@ public class JsonTaskHandlerImpl extends BaseTaskHandler {
                     if (nodeInfo != null) {
                         //=========================执行node最终操作===============================
                         if (!performNodeAction(nodeInfo, actionInfo)) {
-                            Log.e("test_access", "======执行action失败=========");
+                            Log.e(TAG, "======执行action失败=========");
                             interrupt = true;
                             return false;
                         }
                     } else {
-                        Message msg = obtainMessage(R.id.action_error, Statics.Code.ERROR_CODE_NO_NODE, 0, actionInfo);
-                        sendMessage(msg);
+                        sendErrorMsg(Statics.Code.ERROR_CODE_NO_NODE, "未找到node信息：" + actionInfo.toJsonString());
                     }
                 } else {
-                    Log.d("test_access", "======AccessibilityNodeInfo root null=========");
-                    Message msg = obtainMessage(R.id.action_error, Statics.Code.ERROR_CODE_ROOT_NODE_NULL, 0, "===========taskInterrupt=============");
-                    sendMessage(msg);
+                    Log.d(TAG, "======AccessibilityNodeInfo root null=========");
+                    sendErrorMsg(Statics.Code.ERROR_CODE_ROOT_NODE_NULL, "ERROR_CODE_ROOT_NODE_NULL");
                     interrupt = true;
                     return false;
                 }
@@ -435,9 +463,9 @@ public class JsonTaskHandlerImpl extends BaseTaskHandler {
                 nodeInfo = finNode(id, className);
             }
             if (nodeInfo != null) {
-                Log.d("test_access", "findNodeInRoot res:" + nodeInfo.getClassName() + "," + nodeInfo.getText());
+                Log.d(TAG, "findNodeInRoot res:" + nodeInfo.getClassName() + "," + nodeInfo.getText());
             } else {
-                Log.d("test_access", "findNodeInRoot res: null");
+                Log.d(TAG, "findNodeInRoot res: null");
             }
             return nodeInfo;
         }
@@ -471,8 +499,7 @@ public class JsonTaskHandlerImpl extends BaseTaskHandler {
                 if (intent != null) {
                     intents.add(intent);
                 } else {
-                    Message msg = obtainMessage(R.id.action_error, intentInfo.id, 0, "包名不存在:" + intentInfo.packageName1);
-                    sendMessage(msg);
+                    sendErrorMsg(Statics.Code.ERROR_CODE_INTENT_OPEN_FAILED, "包名不存在：" + intentInfo.packageName1 + ",intentInfoId:" + intentInfo.id);
                 }
             }
             if (intentInfo.packageName2 != null) {
@@ -480,8 +507,7 @@ public class JsonTaskHandlerImpl extends BaseTaskHandler {
                 if (intent != null) {
                     intents.add(intent);
                 } else {
-                    Message msg = obtainMessage(R.id.action_error, intentInfo.id, 0, "包名不存在:" + intentInfo.packageName1);
-                    sendMessage(msg);
+                    sendErrorMsg(Statics.Code.ERROR_CODE_INTENT_OPEN_FAILED, "包名不存在：" + intentInfo.packageName2 + ",intentInfoId:" + intentInfo.id);
                 }
             }
             return intents;

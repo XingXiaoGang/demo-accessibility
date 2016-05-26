@@ -10,8 +10,10 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.accessibility.AccessibilityClient;
+import com.example.accessibility.Statics;
 
 import fingerprint.FingerPrintHelper;
 
@@ -20,7 +22,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private static final String DIALOG_FRAGMENT_TAG = "myFragment";
     private ConformDialog mConformDialog;
     private TextView mInfoTextView;
-    private Button mButton;
+    private Button mFingerPrintButton;
+    private Toast mProgressToast;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,8 +32,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         mInfoTextView = (TextView) findViewById(R.id.state_text_view);
         mConformDialog = new ConformDialog();
-        mButton = (Button) findViewById(R.id.open_dialog);
-        mButton.setOnClickListener(this);
+        mFingerPrintButton = (Button) findViewById(R.id.open_dialog);
+        mFingerPrintButton.setOnClickListener(this);
         findViewById(R.id.start_accessibility).setOnClickListener(this);
         findViewById(R.id.open_accessibility_permission).setOnClickListener(this);
     }
@@ -59,7 +62,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
                 case SUPPORT: {
                     mInfoTextView.setText("状态：可用");
-                    mButton.setEnabled(true);
+                    mFingerPrintButton.setEnabled(true);
                     break;
                 }
             }
@@ -105,18 +108,50 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
-    public void onErro(int code, String msg) {
-        Log.d("test_access", "====onErro====" + code + ",,," + msg);
+    public void onError(int code, String msg) {
+        Log.e("test_access", "MainActivity.onError  {code:" + code + ",msg:" + msg + "}");
+        switch (code) {
+            case Statics.Code.ERROR_CODE_NO_PERMISSION: {
+                Toast.makeText(getApplication(), "请先开启辅助权限", Toast.LENGTH_SHORT).show();
+                break;
+            }
+            case Statics.Code.ERROR_CODE_INTERRUPT: {
+                Toast.makeText(getApplication(), "任务已中断", Toast.LENGTH_SHORT).show();
+                break;
+            }
+            case Statics.Code.ERROR_CODE_JSON_PREPARE_FAILED: {
+                Toast.makeText(getApplication(), "json信息关联不完整", Toast.LENGTH_SHORT).show();
+                break;
+            }
+            case Statics.Code.ERROR_CODE_ROOT_NODE_NULL:
+            case Statics.Code.ERROR_CODE_NO_NODE: {
+                Toast.makeText(getApplication(), "未找到Node", Toast.LENGTH_SHORT).show();
+                break;
+            }
+            case Statics.Code.ERROR_CODE_INTENT_OPEN_FAILED: {
+                Toast.makeText(getApplication(), "包名不存在", Toast.LENGTH_SHORT).show();
+                break;
+            }
+        }
     }
 
     @Override
     public void onProgressUpdate(int all, int progress, String description) {
-        Log.d("test_access", "====onProgressUpdate====" + all + ",,," + progress + ":" + description);
-
+        Log.e("test_access", "MainActivity.onProgressUpdate {all:" + all + ",current:" + progress + ",:description:" + description + "}");
+        if (mProgressToast == null) {
+            mProgressToast = Toast.makeText(getApplicationContext(), "", Toast.LENGTH_SHORT);
+        }
+        mProgressToast.setText("当前任务:" + progress + "/" + all + " (" + description + ")");
+        mProgressToast.show();
     }
 
     @Override
     public void onFinish(boolean success) {
-        Log.d("test_access", "====onFinish====" + success);
+        Log.e("test_access", "MainActivity.onFinis：{" + success + "}");
+        if (mProgressToast == null) {
+            mProgressToast = Toast.makeText(getApplicationContext(), "", Toast.LENGTH_LONG);
+        }
+        mProgressToast.setText("辅助任务执行完成：" + success);
+        mProgressToast.show();
     }
 }

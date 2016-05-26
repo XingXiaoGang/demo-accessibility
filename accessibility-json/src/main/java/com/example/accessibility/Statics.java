@@ -17,7 +17,14 @@ public class Statics {
     }
 
     public static class Code {
-        public static final int ERROR_CODE_ROOT_NODE_NULL = 101;//辅助功能未开启导致
-        public static final int ERROR_CODE_NO_NODE = 102;//node查找失败
+        public static final int ERROR_CODE_NO_PERMISSION = 100;//没有辅助权限
+        public static final int ERROR_CODE_JSON_PREPARE_FAILED = 101;//需要的json信息不完整
+        public static final int ERROR_CODE_INTERRUPT = 102;//任务中断
+
+        public static final int ERROR_CODE_ROOT_NODE_NULL = 111;//辅助功能未开启导致
+        public static final int ERROR_CODE_NO_NODE = 112;//node查找失败
+
+        public static final int ERROR_CODE_INTENT_ACTION_FAILED = 120;//执行Action失败
+        public static final int ERROR_CODE_INTENT_OPEN_FAILED = 121;//包名不存在
     }
 }

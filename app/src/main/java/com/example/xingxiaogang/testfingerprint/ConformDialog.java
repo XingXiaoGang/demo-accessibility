@@ -91,6 +91,8 @@ public class ConformDialog extends DialogFragment {
                 break;
             }
         }
+
+
     }
 
     @Override
@@ -104,13 +106,14 @@ public class ConformDialog extends DialogFragment {
         @Override
         public void onAuthenticationError(int errorCode, CharSequence errString) {
             super.onAuthenticationError(errorCode, errString);
-            Toast.makeText(getContext(), "onAuthenticationError：", Toast.LENGTH_LONG).show();
+            Toast.makeText(getContext(), "错误：验证次数过多 ,请稍后再试", Toast.LENGTH_LONG).show();
             mTextView.setText("onAuthenticationError:" + errorCode + "," + String.valueOf(errString));
         }
 
         @Override
         public void onAuthenticationFailed() {
             super.onAuthenticationFailed();
+            //指纹验证失败，指纹识别失败，可再验，该指纹不是系统录入的指纹。
             Toast.makeText(getContext(), "onFailed", Toast.LENGTH_LONG).show();
             mTextView.setText("验证失败");
         }
@@ -118,6 +121,7 @@ public class ConformDialog extends DialogFragment {
         @Override
         public void onAuthenticationHelp(int helpCode, CharSequence helpString) {
             super.onAuthenticationHelp(helpCode, helpString);
+            //指纹验证失败，可再验，可能手指过脏，或者移动过快等原因。
             Toast.makeText(getContext(), "onAuthenticationHelp:", Toast.LENGTH_LONG).show();
             mTextView.setText("onAuthenticationHelp:" + helpCode + "," + String.valueOf(helpString));
         }

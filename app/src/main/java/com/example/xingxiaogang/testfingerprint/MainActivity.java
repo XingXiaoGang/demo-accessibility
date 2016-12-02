@@ -14,6 +14,7 @@ import android.widget.Toast;
 
 import com.example.accessibility.AccessibilityClient;
 import com.example.accessibility.Statics;
+import com.example.xingxiaogang.testfingerprint.utils.DropzoneHelper;
 
 import fingerprint.FingerPrintHelper;
 
@@ -35,6 +36,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mFingerPrintButton = (Button) findViewById(R.id.open_dialog);
         mFingerPrintButton.setOnClickListener(this);
         findViewById(R.id.start_accessibility).setOnClickListener(this);
+        findViewById(R.id.open_float_permission).setOnClickListener(this);
+        findViewById(R.id.open_protect_permission).setOnClickListener(this);
+        findViewById(R.id.open_autostart_permission).setOnClickListener(this);
         findViewById(R.id.open_accessibility_permission).setOnClickListener(this);
     }
 
@@ -91,6 +95,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 } else {
                     Toast.makeText(getApplicationContext(), "暂不支持本机型!", Toast.LENGTH_LONG).show();
                 }
+                break;
+            }
+            case R.id.open_float_permission: {
+                DropzoneHelper.launchSystemDropzoneManager(this);
+                break;
+            }
+            case R.id.open_autostart_permission: {
+                DropzoneHelper.launchAutoStartManager(this);
+                break;
+            }
+            case R.id.open_protect_permission: {
+                DropzoneHelper.launchProtectionManager(this);
                 break;
             }
         }

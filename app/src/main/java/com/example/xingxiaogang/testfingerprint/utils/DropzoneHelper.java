@@ -201,7 +201,10 @@ public class DropzoneHelper {
     private static boolean launchHuaweiProtectionManager(@NonNull Context context) {
         try {
             String emuiVersion = DropzoneHelper.getSystemProperty("ro.build.version.emui");
-            if (emuiVersion != null && emuiVersion.contains("EmotionUI_4.0") || display.startsWith("EMUI4.0") || ("EmotionUI_4.1".equals(emuiVersion) || display.startsWith("EMUI4.1"))) {
+            if (DEBUG) {
+                Log.d(TAG, "launchHuaweiProtectionManager: " + emuiVersion);
+            }
+            if (emuiVersion != null && emuiVersion.contains("EmotionUI_4.0") || emuiVersion.contains("EmotionUI_3.1")||display.startsWith("EMUI4.0") || ("EmotionUI_4.1".equals(emuiVersion) || display.startsWith("EMUI4.1"))) {
                 Intent intent = new Intent();
                 intent.setClassName("com.huawei.systemmanager", "com.huawei.systemmanager.optimize.process.ProtectActivity");
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

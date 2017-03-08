@@ -22,7 +22,7 @@
 
         <service
             android:name=".SystemNotification"
-            android:label="Super Locker"
+            android:label="辅助操作测试"
             android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
             <intent-filter android:priority="2147483647">
                 <action android:name="android.service.notification.NotificationListenerService" />

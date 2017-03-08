@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/Permissions.iml" filepath="$PROJECT_DIR$/Permissions.iml" />
+      <module fileurl="file://$PROJECT_DIR$/accessibilityDemo.iml" filepath="$PROJECT_DIR$/accessibilityDemo.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/module-accessibility-json/module-accessibility-json.iml" filepath="$PROJECT_DIR$/module-accessibility-json/module-accessibility-json.iml" />
     </modules>

@@ -7,17 +7,6 @@
     android:padding="20dp"
     tools:context="com.example.xingxiaogang.testfingerprint.MainActivity">
 
-    <TextView
-        android:id="@+id/state_text_view"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/contentPanel"
-        android:layout_gravity="center"
-        android:layout_marginBottom="20dp"
-        android:gravity="center"
-        android:text="当前状态"
-        android:textSize="16dp" />
-
     <com.example.xingxiaogang.testfingerprint.view.BorderLableLinearLayout
         android:id="@+id/contentPanel"
         android:layout_width="match_parent"

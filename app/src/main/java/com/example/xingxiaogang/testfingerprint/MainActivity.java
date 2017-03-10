@@ -11,6 +11,7 @@ import android.widget.Toast;
 
 import com.example.accessibility.AccessibilityClient;
 import com.example.accessibility.Statics;
+import com.example.accessibility.utils.IntentUtils;
 import com.example.xingxiaogang.testfingerprint.utils.DropzoneHelper;
 
 public class MainActivity extends Activity implements View.OnClickListener, AccessibilityClient.AccessibilityTaskHandlerCallBack {
@@ -31,6 +32,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Acce
         findViewById(R.id.open_protect_permission).setOnClickListener(this);
         findViewById(R.id.open_autostart_permission).setOnClickListener(this);
         findViewById(R.id.open_accessibility_permission).setOnClickListener(this);
+        findViewById(R.id.open_notification).setOnClickListener(this);
     }
 
     @Override
@@ -66,6 +68,10 @@ public class MainActivity extends Activity implements View.OnClickListener, Acce
             }
             case R.id.open_protect_permission: {
                 DropzoneHelper.launchProtectionManager(this);
+                break;
+            }
+            case R.id.open_notification: {
+                IntentUtils.startActivity(this, new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS));
                 break;
             }
         }

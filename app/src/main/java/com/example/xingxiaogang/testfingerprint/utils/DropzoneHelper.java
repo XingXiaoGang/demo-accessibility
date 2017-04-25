@@ -17,20 +17,16 @@ import android.util.Log;
 import java.lang.reflect.Method;
 import java.util.Locale;
 
+
 /**
  * Created by Potter on 2016/4/27.
  * Where there is a will there is a way.
  */
 public class DropzoneHelper {
 
-    private static final String TAG = "DropzoneHelper";
     private static final boolean DEBUG = true;
-
-    private static final String product;
-    private static final String model;
-    private static final String manufacturer;
+    private static final String TAG = "DropzoneHelper";
     private static final String display;
-
 
     public interface DropzonePermissionManagePageType {
         /**
@@ -44,26 +40,8 @@ public class DropzoneHelper {
     }
 
     static {
-        String tmp;
-
-        tmp = Build.PRODUCT;
-        product = (tmp == null ? "" : tmp.toLowerCase(Locale.US));
-
-        tmp = Build.MODEL;
-        model = (tmp == null ? "" : tmp.toLowerCase(Locale.US));
-
-        tmp = Build.MANUFACTURER;
-        manufacturer = (tmp == null ? "" : tmp.toLowerCase(Locale.US));
-
-        tmp = Build.DISPLAY;
+        String tmp = Build.DISPLAY;
         display = (tmp == null ? "" : tmp.toLowerCase(Locale.US));
-    }
-
-    /**
-     * 是否为华为手机
-     */
-    private static boolean isHuawei() {
-        return "huawei".equalsIgnoreCase(manufacturer);
     }
 
     /**
@@ -80,84 +58,6 @@ public class DropzoneHelper {
             }
         } catch (Exception e) {
             return false;
-        }
-        return false;
-    }
-
-    /**
-     * 是否为魅族手机
-     */
-    public static boolean isMeizu() {
-        return "meizu".equalsIgnoreCase(manufacturer);
-    }
-
-    /**
-     * 是否为小米手机
-     */
-    public static boolean isXiaomi() {
-        return "xiaomi".equals(manufacturer) && DropzoneHelper.getSystemProperty("ro.miui.ui.version.name") != null;
-    }
-
-    /**
-     * 是否为小米 MIUI Version = V5
-     */
-    private static final boolean isMiuiV5() {
-        String miuiVersion = DropzoneHelper.getSystemProperty("ro.miui.ui.version.name");
-        return miuiVersion != null && miuiVersion.equalsIgnoreCase("V5");
-    }
-
-    /**
-     * 是否为小米 MIUI Version = V6
-     */
-    private static final boolean isMiuiV6() {
-        String miuiVersion = DropzoneHelper.getSystemProperty("ro.miui.ui.version.name");
-        return miuiVersion != null && miuiVersion.equalsIgnoreCase("V6");
-    }
-
-    /**
-     * 是否为小米 MIUI Version = V7
-     */
-    private static final boolean isMiuiV7() {
-        String miuiVersion = DropzoneHelper.getSystemProperty("ro.miui.ui.version.name");
-        return miuiVersion != null && miuiVersion.equalsIgnoreCase("V7");
-    }
-
-    /**
-     * 是否为Oppo手机
-     */
-    private static boolean isOppo() {
-        return "oppo".equalsIgnoreCase(manufacturer);
-    }
-
-    private static boolean isOppoV3() {
-        String colorOsVersion = DropzoneHelper.getSystemProperty("ro.build.version.opporom");
-        return colorOsVersion != null && colorOsVersion.equalsIgnoreCase("V3.0.0");
-    }
-
-    /**
-     * 华为EmotionUI悬浮窗权限开启(截止2016/4/27)
-     * (1) EMUI 3.1、EMUI 4.0、EMUI 4.1为一类
-     * (2) EMUI 2.3为一类
-     * (3) Others
-     */
-    private static final boolean fitEmuiTypeAForDropzone() {
-        String emuiVersion = DropzoneHelper.getSystemProperty("ro.build.version.emui");
-        if ("EmotionUI_3.1".equals(emuiVersion) || display.startsWith("EMUI3.1")) {
-            return true;
-        }
-        if ("EmotionUI_4.0".equals(emuiVersion) || display.startsWith("EMUI4.0")) {
-            return true;
-        }
-        if ("EmotionUI_4.1".equals(emuiVersion) || display.startsWith("EMUI4.1")) {
-            return true;
-        }
-        return false;
-    }
-
-    private static final boolean fitEmuiTypeBForDropzone() {
-        String emuiVersion = DropzoneHelper.getSystemProperty("ro.build.version.emui");
-        if ("EmotionUI_2.3".equals(emuiVersion) || display.startsWith("EMUI2.3")) {
-            return true;
         }
         return false;
     }
@@ -180,8 +80,8 @@ public class DropzoneHelper {
     private static boolean launchHuaweiDropzoneManager(@NonNull Context context) {
         try {
             Intent intent = new Intent();
-            String className = fitEmuiTypeAForDropzone() ? "com.huawei.systemmanager.addviewmonitor.AddViewMonitorActivity"
-                    : fitEmuiTypeBForDropzone() ? "com.huawei.systemmanager.SystemManagerMainActivity"
+            String className = PhoneDeviceMatchUtils.fitEmuiTypeAForDropzone() ? "com.huawei.systemmanager.addviewmonitor.AddViewMonitorActivity"
+                    : PhoneDeviceMatchUtils.fitEmuiTypeBForDropzone() ? "com.huawei.systemmanager.SystemManagerMainActivity"
                     : fitEmuiType3dot1LiteForDropzone() ? "com.huawei.systemmanager.addviewmonitor.AddViewMonitorActivity" : "com.huawei.notificationmanager.ui.NotificationManagmentActivity";
             intent.setClassName("com.huawei.systemmanager", className);
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -201,10 +101,7 @@ public class DropzoneHelper {
     private static boolean launchHuaweiProtectionManager(@NonNull Context context) {
         try {
             String emuiVersion = DropzoneHelper.getSystemProperty("ro.build.version.emui");
-            if (DEBUG) {
-                Log.d(TAG, "launchHuaweiProtectionManager: " + emuiVersion);
-            }
-            if (emuiVersion != null && emuiVersion.contains("EmotionUI_4.0") || emuiVersion.contains("EmotionUI_3.1")||display.startsWith("EMUI4.0") || ("EmotionUI_4.1".equals(emuiVersion) || display.startsWith("EMUI4.1"))) {
+            if (emuiVersion != null && emuiVersion.contains("EmotionUI_4.0") || display.startsWith("EMUI4.0") || ("EmotionUI_4.1".equals(emuiVersion) || display.startsWith("EMUI4.1"))) {
                 Intent intent = new Intent();
                 intent.setClassName("com.huawei.systemmanager", "com.huawei.systemmanager.optimize.process.ProtectActivity");
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -279,7 +176,7 @@ public class DropzoneHelper {
         if (!TextUtils.isEmpty(packageName)) {
             try {
                 Intent intent;
-                if (isMiuiV6() || isMiuiV7()) {
+                if (PhoneDeviceMatchUtils.getMiuiVersion() == 6 || PhoneDeviceMatchUtils.getMiuiVersion() == 7) {
                     intent = new Intent("miui.intent.action.APP_PERM_EDITOR");
                     intent.setClassName("com.miui.securitycenter", "com.miui.permcenter.permissions.AppPermissionsEditorActivity");
                     intent.putExtra("extra_pkgname", packageName);
@@ -309,7 +206,7 @@ public class DropzoneHelper {
     private static boolean launchXiaomiAutoStartManager(@NonNull Context context) {
         try {
             Intent intent;
-            if (isMiuiV7()) {
+            if (PhoneDeviceMatchUtils.getMiuiVersion() == 7) {
                 intent = new Intent();
                 intent.setClassName("com.miui.securitycenter", "com.miui.permcenter.autostart.AutoStartManagementActivity");
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -331,7 +228,7 @@ public class DropzoneHelper {
     private static boolean launchOppoDropzoneManager(@NonNull Context context) {
         try {
             Intent intent;
-            if (isOppoV3()) {
+            if (PhoneDeviceMatchUtils.isOppoV3()) {
                 intent = new Intent("action.coloros.safecenter.FloatWindowListActivity");
                 intent.setClassName("com.coloros.safecenter", "com.coloros.safecenter.permission.floatwindow.FloatWindowListActivity");
             } else {
@@ -347,6 +244,28 @@ public class DropzoneHelper {
             return false;
         }
     }
+
+    private static boolean launchVivoDropZoneManager(Context context) {
+        try {
+            PackageManager pm = context.getPackageManager();
+            Intent intent = pm.getLaunchIntentForPackage("com.iqoo.secure");
+            if (intent == null) {
+                if (DEBUG) {
+                    Log.d(TAG, "startPackage: pm.getLaunchIntentForPackage return null： " + "com.iqoo.secure");
+                }
+                return false;
+            }
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            context.startActivity(intent);
+            return true;
+        } catch (Exception e) {
+            if (DEBUG) {
+                Log.d(TAG, "launchVivoDropZoneManager: Failed to launch FloatIconManager Activity", e);
+            }
+        }
+        return false;
+    }
+
 
     /**
      * 开启手机"悬浮窗权限管理"窗口,非特殊机型时使用此方法
@@ -377,9 +296,9 @@ public class DropzoneHelper {
     public static int launchSystemDropzoneManager(@NonNull Context context) {
         int res = 0;
         //6.0上优先使用这种方法 add by g (小米手机用这种方法授权以后,重启会自动禁止掉权限)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !isXiaomi()) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !PhoneDeviceMatchUtils.isMiui()) {
             try {
-                Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + context.getPackageName()));
+                Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:com.apusapps.tools.unreadtips"));
                 if (!(context instanceof Activity)) {
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 }
@@ -393,14 +312,16 @@ public class DropzoneHelper {
         }
 
         if (res == 0) {
-            if (DropzoneHelper.isXiaomi()) {
+            if (PhoneDeviceMatchUtils.isMiui()) {
                 res = DropzoneHelper.launchXiaomiDropzoneManager(context) ? 2 : res;
-            } else if (DropzoneHelper.isHuawei() && DropzoneHelper.isHuaweiWithAdvancedFunc(context)) {
+            } else if (PhoneDeviceMatchUtils.isHuaWei() && DropzoneHelper.isHuaweiWithAdvancedFunc(context)) {
                 res = DropzoneHelper.launchHuaweiDropzoneManager(context) ? 2 : res;
-            } else if (DropzoneHelper.isMeizu()) {
+            } else if (PhoneDeviceMatchUtils.isMeizu()) {
                 res = DropzoneHelper.launchMeizuDropzoneManager(context) ? 2 : res;
-            } else if (DropzoneHelper.isOppo()) {
+            } else if (PhoneDeviceMatchUtils.isOppo()) {
                 res = DropzoneHelper.launchOppoDropzoneManager(context) ? 2 : res;
+            } else if (PhoneDeviceMatchUtils.isVivo() && PhoneDeviceMatchUtils.getVivoFuntouchOsVersion() >= 25) {
+                res = launchVivoDropZoneManager(context) ? 2 : res;
             } else {
                 res = DropzoneHelper.launchGeneralDropzoneManager(context) ? 2 : res;
             }
@@ -417,30 +338,29 @@ public class DropzoneHelper {
          * TYPE_B : EMUI with advanced function
          * TYPE_C : 应用详情页-->权限管理-->开启浮窗权限
          */
-        if (isXiaomi()) {
-            if (isMiuiV6() || isMiuiV7()) {
+        if (PhoneDeviceMatchUtils.isMiui()) {
+            if (PhoneDeviceMatchUtils.getMiuiVersion() == 6 || PhoneDeviceMatchUtils.getMiuiVersion() == 7) {
                 return DropzonePermissionManagePageType.TYPE_A;
             } else {
                 return DropzonePermissionManagePageType.TYPE_C;
             }
-        } else if (isHuawei() && isHuaweiWithAdvancedFunc(context)) {
+        } else if (PhoneDeviceMatchUtils.isHuaWei() && isHuaweiWithAdvancedFunc(context)) {
             return DropzonePermissionManagePageType.TYPE_B;
-        } else if (isMeizu()) {
+        } else if (PhoneDeviceMatchUtils.isMeizu()) {
             if (Build.VERSION.SDK_INT >= 21) {
                 return DropzonePermissionManagePageType.TYPE_A;
             } else {
                 return DropzonePermissionManagePageType.TYPE_C;
             }
-        } else if (isOppo()) {
+        } else if (PhoneDeviceMatchUtils.isOppo()) {
             return DropzonePermissionManagePageType.TYPE_B;
         } else {
             return DropzonePermissionManagePageType.TYPE_C;
         }
     }
 
-    public static
     @Nullable
-    String getSystemProperty(@NonNull String propertyName) {
+    public static String getSystemProperty(@NonNull String propertyName) {
         String propertyValue = null;
         try {
             Class<?> systemProperties = Class.forName("android.os.SystemProperties");
@@ -454,16 +374,25 @@ public class DropzoneHelper {
         return propertyValue;
     }
 
-    public static boolean isDropzonePermissionAllowed(@NonNull Context context) {
-        boolean isSpecialMiui = DropzoneHelper.isXiaomi() && (DropzoneHelper.isMiuiV5() || DropzoneHelper.isMiuiV6());
-        if (Build.VERSION.SDK_INT >= 19 || isSpecialMiui) {
-            return DropzoneHelper.dropzonePermissionAllowed(context);
+    public static boolean isDropzonePermissionAllowed(@NonNull Context context, boolean service) {
+        if (Build.VERSION.SDK_INT <= 18) {
+            return true;
         }
-        return true;
+        String prop = DropzoneHelper.getSystemProperty("ro.miui.ui.version.name");
+        //miui上，直接禁止了Toast级别的浮窗，  api>25上，显示成功但过几秒会自动消失
+        if (Build.VERSION.SDK_INT >= 25 || prop != null && prop.toLowerCase().contains("v8")) {
+            return dropzonePermissionAllowed(context);
+        } else {
+            //todo 更准确的判断有没有Toast级别的浮窗权限
+            return true;
+        }
     }
 
     @TargetApi(19)
-    private static boolean dropzonePermissionAllowed(@NonNull Context context) {
+    public static boolean dropzonePermissionAllowed(@NonNull Context context) {
+        if (Build.VERSION.SDK_INT >= 25) {
+            return Settings.canDrawOverlays(context);
+        }
         if (Build.VERSION.SDK_INT >= 19) {
             return AppOpsManagerUtils.isOpsAllowed(context, 24);
         }
@@ -481,7 +410,7 @@ public class DropzoneHelper {
      */
     public static boolean isAskingForProtectionEnable(@NonNull Context context) {
         do {
-            if (DropzoneHelper.isHuawei() && DropzoneHelper.isHuaweiWithAdvancedFunc(context)) {
+            if (PhoneDeviceMatchUtils.isHuaWei() && DropzoneHelper.isHuaweiWithAdvancedFunc(context)) {
                 String emuiVersion = DropzoneHelper.getSystemProperty("ro.build.version.emui");
                 if ("EmotionUI_4.0".equals(emuiVersion) || display.startsWith("EMUI4.0")) {
                     return true;
@@ -514,7 +443,7 @@ public class DropzoneHelper {
      */
     public static boolean isAskingForAutoStartEnable(@NonNull Context context) {
         do {
-            if (DropzoneHelper.isHuawei() && DropzoneHelper.isHuaweiWithAdvancedFunc(context)) {
+            if (PhoneDeviceMatchUtils.isHuaWei() && DropzoneHelper.isHuaweiWithAdvancedFunc(context)) {
                 String emuiVersion = DropzoneHelper.getSystemProperty("ro.build.version.emui");
                 if ("EmotionUI_4.0".equals(emuiVersion) || display.startsWith("EMUI4.0")) {
                     return true;
@@ -524,8 +453,8 @@ public class DropzoneHelper {
                 }
                 break;
             }
-            if (DropzoneHelper.isXiaomi()) {
-                if (DropzoneHelper.isMiuiV7()) {
+            if (PhoneDeviceMatchUtils.isMiui()) {
+                if (PhoneDeviceMatchUtils.getMiuiVersion() == 7) {
                     return true;
                 }
                 break;
@@ -542,22 +471,12 @@ public class DropzoneHelper {
      * @return
      */
     public static boolean launchAutoStartManager(@NonNull Context context) {
-        if (DropzoneHelper.isXiaomi()) {
+        if (PhoneDeviceMatchUtils.isMiui()) {
             return DropzoneHelper.launchXiaomiAutoStartManager(context);
         }
-        if (DropzoneHelper.isHuawei()) {
+        if (PhoneDeviceMatchUtils.isHuaWei()) {
             return DropzoneHelper.launchHuaweiAutoStartManager(context);
         }
         return false;
-    }
-
-    public static String dump() {
-        String info = "";
-        if (DEBUG) {
-            info = "product:" + product + ",model:" + model + ",manufacturer:" + manufacturer
-                    + ",display:" + display + ",board:" + Build.BOARD + ",brand:" + Build.BRAND + ",device:"
-                    + Build.DEVICE;
-        }
-        return info;
     }
 }
